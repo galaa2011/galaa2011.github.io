@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-02-23T05:54:34.391Z</updated>
+  <updated>2016-02-23T06:32:57.357Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2016/02/23/SPA%E6%A1%86%E6%9E%B6%E6%B5%81%E7%A8%8B%E8%A7%A3%E8%AF%BB-er/"/>
     <id>http://yoursite.com/2016/02/23/SPA框架流程解读-er/</id>
     <published>2016-02-23T03:37:51.000Z</published>
-    <updated>2016-02-23T05:54:34.391Z</updated>
+    <updated>2016-02-23T06:32:57.357Z</updated>
     
     <content type="html">&lt;blockquote&gt;
 &lt;p&gt;本文将从代码层级解读er启动后以怎样的方式进入Action，并且通过怎样的流程走完Action的整个生命周期。&lt;/p&gt;
