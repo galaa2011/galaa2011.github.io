@@ -929,7 +929,7 @@ pre .javascript .function {
   display: inline-block;
   vertical-align: top;
   line-height: 36px;
-  font-size: 20px;
+  font-size: 26px;
   font-weight: normal;
 }
 .site-subtitle {
@@ -1529,7 +1529,7 @@ pre .javascript .function {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #5005e9;
+  background: #ff1fff;
 }
 .sidebar-nav {
   margin: 0 0 20px;
