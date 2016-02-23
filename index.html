@@ -221,6 +221,15 @@
 
     
     
+      
+      
+        
+        
+        
+      
+
+      
+    
 
     
       
@@ -312,208 +321,23 @@
       
         
           
-            <blockquote>
-<p>本文将从代码层级解读er启动后以怎样的方式进入Action，并且通过怎样的流程走完Action的整个生命周期。</p>
-</blockquote>
-<h2 id="首先了解下er启动的三个核心组件。"><a href="#首先了解下er启动的三个核心组件。" class="headerlink" title="首先了解下er启动的三个核心组件。"></a>首先了解下er启动的三个核心组件。</h2><ul>
-<li>locator</li>
-<li>router</li>
-<li>controller</li>
-</ul>
-<h3 id="locator-地址监听对象"><a href="#locator-地址监听对象" class="headerlink" title="locator 地址监听对象"></a>locator 地址监听对象</h3><blockquote>
-<p>该对象用于监听地址中的hash部分的变化，以及根据要求更新hash值。</p>
-</blockquote>
-<p><strong>locator的基本工作流程：</strong></p>
-<ul>
-<li>监听hash的变化</li>
-<li>当hash变化时，如果确实发生变化（与上一次的值不同），则执行逻辑</li>
-<li>保存当前的地址信息（高版本浏览器此时自动记录历史项）</li>
-<li>触发<code>redirect</code>事件</li>
-</ul>
-<p>在<code>locator.js</code>中的主要对应代码如下：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">locator.redirect = <span class="function"><span class="keyword">function</span> (<span class="params">url, options</span>) </span>&#123;</span><br><span class="line">    options = options || &#123;&#125;;</span><br><span class="line">    url = locator.resolveURL(url);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> referrer = currentLocation;</span><br><span class="line">    <span class="keyword">var</span> isLocationChanged = updateURL(url, options);</span><br><span class="line">    <span class="keyword">var</span> shouldPerformRedirect = isLocationChanged || options.force;</span><br><span class="line">    <span class="keyword">if</span> (shouldPerformRedirect) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!options.silent) &#123;</span><br><span class="line">            <span class="comment">/**</span><br><span class="line">             + URL跳转时触发</span><br><span class="line">             *</span><br><span class="line">             + @event redirect</span><br><span class="line">             + @param &#123;Object&#125; e 事件对象</span><br><span class="line">             + @param &#123;string&#125; e.url 当前的URL</span><br><span class="line">             */</span></span><br><span class="line">            locator.fire(</span><br><span class="line">                <span class="string">'redirect'</span>,</span><br><span class="line">                &#123; url: url, referrer: referrer &#125;</span><br><span class="line">            );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">require</span>(<span class="string">'./events'</span>).fire(</span><br><span class="line">            <span class="string">'redirect'</span>,</span><br><span class="line">            &#123; url: url, referrer: referrer &#125;</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> shouldPerformRedirect;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>注：代码中变量<code>isLocationChanged</code>判断location是否变化，如果变化则<code>fire</code>(触发)<code>redirect</code>事件。</p>
-<h3 id="router-路由类"><a href="#router-路由类" class="headerlink" title="router 路由类"></a>router 路由类</h3><blockquote>
-<p>路由用于将特定的URL对应到特定的函数上，并在URL变化（locator对象支持）时，执行相应的函数。</p>
-</blockquote>
-<p><strong>URL与函数的对应规则有3种形式：</strong></p>
-<ul>
-<li>当使用字符串作为规则时，URL的path部分与字符串完全匹配</li>
-<li>当使用正则表达式作为规则时，URL的path部分匹配该正则</li>
-<li>当所有路由规则均不匹配某个URL时，会调用setBackup提供的函数</li>
-</ul>
-<p>在<code>router.js</code>中的主要对应代码如下：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">executeRoute</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> url = <span class="built_in">require</span>(<span class="string">'./URL'</span>).parse(e.url);</span><br><span class="line">    <span class="keyword">var</span> path = url.getPath();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="keyword">this</span>.routes.length; i++) &#123;</span><br><span class="line">        <span class="keyword">var</span> route = <span class="keyword">this</span>.routes[i];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((route.rule <span class="keyword">instanceof</span> <span class="built_in">RegExp</span> &amp;&amp; route.rule.test(path)) || route.rule === path) &#123;</span><br><span class="line">            route.handler.call(<span class="keyword">this</span>, url);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.backup) &#123;</span><br><span class="line">        <span class="keyword">this</span>.backup(url);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.getEventBus().fire(<span class="string">'route'</span>, &#123; url: url, router: <span class="keyword">this</span> &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>注：代码中for循环里的routes循环值，即为所有注册好的路由规则。</p>
-<ol>
-<li>首先校验判断是否为正则表达式，并且满足正则条件。<code>route.rule instanceof RegExp &amp;&amp; route.rule.test(path)</code></li>
-<li>如果条件1不成立，则判断字符串类型的规则是否完全相等。<code>route.rule === path</code></li>
-<li>条件1、2均不成立，则执行<code>this.backup(url)</code>，即上文提到的”setBackup提供的函数”。</li>
-</ol>
-<h3 id="controller-控制器类"><a href="#controller-控制器类" class="headerlink" title="controller 控制器类"></a>controller 控制器类</h3><blockquote>
-<p>负责URL与Action的调度，将URL映射到具体的一个Action的执行上。</p>
-</blockquote>
-<p>在<code>controller.js</code>中的主要对应代码如下：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">exports.renderAction = <span class="function"><span class="keyword">function</span> (<span class="params">url</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> url === <span class="string">'string'</span>) &#123;</span><br><span class="line">        url = URL.parse(url);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.globalActionLoader &amp;&amp; <span class="keyword">typeof</span> <span class="keyword">this</span>.globalActionLoader.abort === <span class="string">'function'</span>) &#123;</span><br><span class="line">        <span class="keyword">this</span>.globalActionLoader.abort();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.currentAction</span><br><span class="line">        &amp;&amp; <span class="keyword">typeof</span> <span class="keyword">this</span>.currentAction.filterRedirect === <span class="string">'function'</span></span><br><span class="line">        &amp;&amp; <span class="keyword">this</span>.currentAction.filterRedirect(url) === <span class="literal">false</span></span><br><span class="line">    ) &#123;</span><br><span class="line">        <span class="keyword">return</span> Deferred.rejected(<span class="string">'Redirect aborted by previous action'</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.globalActionLoader = <span class="keyword">this</span>.forward(url, <span class="keyword">this</span>.getMainContainer(), <span class="literal">null</span>, <span class="literal">false</span>);</span><br><span class="line">    <span class="keyword">var</span> events = <span class="keyword">this</span>.getEventBus();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.globalActionLoader</span><br><span class="line">        .then(util.bind(<span class="keyword">this</span>.enterAction, <span class="keyword">this</span>))</span><br><span class="line">        .fail(util.bind(events.notifyError, events));</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>注：在之前一直提到一句话”setBackup提供的函数”，这里所说的”提供的函数”就是上文中的<code>renderAction</code>。<code>renderAction</code>接收一个参数<code>url</code>，并将其映射<code>forward</code>到具体的Action上，随后开始进入Action。即代码最后的<code>enterAction</code></p>
-<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>至此，上面说了er下的三个核心组件<code>locator</code>、<code>router</code>和<code>controller</code>，且介绍了每个组件的作用及主要对应的代码内容。但这些内容是通过怎样的流程执行，并最后走到<code>renderAction</code>开始Action的生命周期？下面将会把上述内容串联起来。</p>
-<h2 id="Aciton-入口"><a href="#Aciton-入口" class="headerlink" title="Aciton 入口"></a>Aciton 入口</h2><p>在介绍如何进入Action前，我们先看下er启动时，三个核心组件都做了什么事情？</p>
-<p><strong>进入locator时做的事情</strong><br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">start</span>(<span class="params">firstTime</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 如果有hashchange事件则使用事件，否则定时监听</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">window</span>.addEventListener) &#123;</span><br><span class="line">        <span class="built_in">window</span>.addEventListener(<span class="string">'hashchange'</span>, forwardHash, <span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">'onhashchange'</span> <span class="keyword">in</span> <span class="built_in">window</span> &amp;&amp; <span class="built_in">document</span>.documentMode &gt; <span class="number">7</span>) &#123;</span><br><span class="line">        <span class="built_in">window</span>.attachEvent(<span class="string">'onhashchange'</span>, forwardHash);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        rollTimer = setInterval(forwardHash, <span class="number">100</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理初次进入的hash</span></span><br><span class="line">    <span class="keyword">if</span> (firstTime) &#123;</span><br><span class="line">        startupTimer = setTimeout(forwardHash, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">forwardHash</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> url = getLocation();</span><br><span class="line">    locator.redirect(url);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><strong>进入router时做的事情</strong></p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">exports.start = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.getLocator().on(<span class="string">'redirect'</span>, executeRoute, <span class="keyword">this</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p><strong>进入controller时做的事情</strong><br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">exports.start = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">this</span>.getDefaultTitle()) &#123;</span><br><span class="line">        <span class="keyword">this</span>.setDefaultTitle(config.systemName || <span class="built_in">document</span>.title);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 干脆接管所有路由</span></span><br><span class="line">    <span class="keyword">this</span>.getRouter().setBackup(util.bind(<span class="keyword">this</span>.renderAction, <span class="keyword">this</span>));</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>直接看上面的代码，可能没那么好理解。先解释下，回头再看就会比较清楚。<br>那么上面说的一个什么意思呢？</p>
-<ol>
-<li>进入locator，变量<code>firstTime</code>判断是否第一次进入，如果是则立即异步执行。<code>setTimeout(forwardHash, 0)</code>，执行了函数forwardHash。再看，forwardHash中紧接着又执行了<code>locator.redirect(url)</code>。而<code>redirect</code>又做了什么？接着往下走……</li>
-<li>进入router，则是直接获取了locator对象，并注册了<code>redirect</code>事件，回调函数是<code>executeRoute</code>。ctrl + f 下这个关键词，是不是发现这个在上面出现过。没错，这里当发生<code>redirect</code>时，便会进入方法<code>executeRoute</code>中，在此函数中判断路由规则，不满足条件则执行<code>this.backup(url)</code>，即又是我们多次提到的”setBackup提供的函数”<code>renderAction</code>。为什么是这个函数呢？下面……</li>
-<li>进入controller，<code>setBackup(util.bind(this.renderAction, this))</code>这行代码是不是就清楚了。</li>
-</ol>
-<p>为了更直观的表述，下面再加个流程图(<em>这里好像不支持直接画流程图，所以上个图片</em>)：</p>
-<p><img src="images/er_flow.jpg" alt="er_flow"></p>
-<h4 id="小结-1"><a href="#小结-1" class="headerlink" title="小结"></a>小结</h4><p>上述从代码到描述，再加上最后的流程图，解释了Action的两个入口。即第一次进入，会通过<code>setTimeout(&#39;forwardHash&#39;, 0)</code>的方式，其他则通过<code>locator.redirect(url)</code>。</p>
-<h2 id="er中Action类的生命周期"><a href="#er中Action类的生命周期" class="headerlink" title="er中Action类的生命周期"></a>er中Action类的生命周期</h2><ul>
-<li>enter</li>
-<li>beforemodelload</li>
-<li>modelloaded</li>
-<li>beforerender</li>
-<li>rendered</li>
-<li>entercomplete</li>
-</ul>
-<p>er中Action的生命周期主要就是上面6个节点。下面先把相关代码贴上来，之后对关键点进行说明：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">exports.enter = <span class="function"><span class="keyword">function</span> (<span class="params">actionContext</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.context = actionContext || &#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span><br><span class="line">     *@event enter</span><br><span class="line">     *</span><br><span class="line">     *Action生命周期开始执行时触发</span><br><span class="line">     */</span></span><br><span class="line">    <span class="keyword">this</span>.fire(<span class="string">'enter'</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// `actionContext.args`里有URL里的参数和子Action时传入的`options`，全部放到`Model`上去</span></span><br><span class="line">    <span class="keyword">var</span> args = util.mix(&#123;&#125;, actionContext &amp;&amp; actionContext.args);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.model) &#123;</span><br><span class="line">        <span class="keyword">this</span>.model.fill(args);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>.model = <span class="keyword">this</span>.createModel(args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span><br><span class="line">     *@event beforemodelload</span><br><span class="line">     *</span><br><span class="line">     *`Model`已经创建完毕，开始进行数据加载前触发</span><br><span class="line">     */</span></span><br><span class="line">    <span class="keyword">this</span>.fire(<span class="string">'beforemodelload'</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.model &amp;&amp; <span class="keyword">typeof</span> <span class="keyword">this</span>.model.load === <span class="string">'function'</span>) &#123;</span><br><span class="line">        <span class="keyword">var</span> loadingModel = <span class="keyword">this</span>.model.load();</span><br><span class="line">        <span class="keyword">return</span> loadingModel.then(</span><br><span class="line">            util.bind(<span class="keyword">this</span>.forwardToView, <span class="keyword">this</span>),</span><br><span class="line">            util.bind(reportErrors, <span class="keyword">this</span>)</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>.forwardToView();</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">'./Deferred'</span>).resolved(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">exports.forwardToView = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 如果已经销毁了就别再继续下去</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.disposed) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span><br><span class="line">     *@event modelloaded</span><br><span class="line">     *</span><br><span class="line">     *Model加载完成时触发</span><br><span class="line">     */</span></span><br><span class="line">    <span class="keyword">this</span>.fire(<span class="string">'modelloaded'</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">this</span>.view) &#123;</span><br><span class="line">        <span class="keyword">this</span>.view = <span class="keyword">this</span>.createView();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.view) &#123;</span><br><span class="line">        <span class="keyword">this</span>.view.model = <span class="keyword">this</span>.model;</span><br><span class="line">        <span class="comment">// 如果创建View的时候已经设置了`container`，就不要强行干扰了</span></span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">this</span>.view.container) &#123;</span><br><span class="line">            <span class="keyword">this</span>.view.container = <span class="keyword">this</span>.context.container;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span><br><span class="line">         *@event beforerender</span><br><span class="line">         *</span><br><span class="line">         *视图开始渲染时触发</span><br><span class="line">         */</span></span><br><span class="line">        <span class="keyword">this</span>.fire(<span class="string">'beforerender'</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.view.render();</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span><br><span class="line">         *@event rendered</span><br><span class="line">         *</span><br><span class="line">         *视图渲染完毕后触发</span><br><span class="line">         */</span></span><br><span class="line">        <span class="keyword">this</span>.fire(<span class="string">'rendered'</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.initBehavior();</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span><br><span class="line">         *@event entercomplete</span><br><span class="line">         *</span><br><span class="line">         *Action进入完毕后触发</span><br><span class="line">         */</span></span><br><span class="line">        <span class="keyword">this</span>.fire(<span class="string">'entercomplete'</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">var</span> events = <span class="built_in">require</span>(<span class="string">'./events'</span>);</span><br><span class="line">        events.notifyError(<span class="string">'No view attached to this action'</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>简单看上述代码发现之前提到的6个节点均能找到。OK，那么…</p>
-<ol>
-<li>Action生命周期开始执行时触发<code>this.fire(&#39;enter&#39;)</code></li>
-<li>进入Action首先会创建model或者填充已存在的model，即createModel/model.fill</li>
-<li>Model创建完毕，开始进行数据加载前触发<code>this.fire(&#39;beforemodelload&#39;)</code></li>
-<li>Model加载数据，成功后指向forwardToView，即model.load-&gt;then(this.forwardToView)</li>
-<li>Model加载完成时触发<code>this.fire(&#39;modelloaded&#39;)</code></li>
-<li>Model加载完成后，接着就会创建View，即this.view = this.createView()</li>
-<li>当View也创建好后，则开始渲染，渲染前先触发事件<code>this.fire(&#39;beforerender&#39;)</code></li>
-<li>渲染视图View，即view.render()</li>
-<li>视图渲染完毕后触发<code>this.fire(&#39;rendered&#39;)</code></li>
-<li>为视图View中的控件事件，初始化各自的行为。即this.initBehavior()</li>
-<li>Action进入完毕后触发<code>this.fire(&#39;entercomplete&#39;)</code></li>
-</ol>
-<h4 id="小结-2"><a href="#小结-2" class="headerlink" title="小结"></a>小结</h4><p>上述基本步骤，解释了Action整个生命周期所做的事情。从进入Action到Model的创建及数据加载，再到视图View的创建及渲染展示。<br>下面是一个脑图，包含了一个业务模块从开始进入到最终展示，er所对应的执行流程。包含了上面讲的所有内容，及一些这里没有涉及的细节。可对照分析…</p>
-<p><a href="http://naotu.baidu.com/file/3c795abd2fa8883aa52d0587a926a931" target="_blank" rel="external">思维导图</a><em>密码:12Be</em></p>
-
           
-        
-      
-    </div>
+本文将从代码层级解读er启动后以怎样的方式进入Action，并且通过怎样的流程走完Action的整个生命周期。
 
-    <footer class="post-footer">
-      
+首先了解下er启动的三个核心组件。
+locator
+router
+controller
 
-      
+locator 地址监听对象
+该对象用于监听地址中的hash部分的变化，以及根据要求更新has
+          ...
 
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/02/23/hello-world/" itemprop="url">
-                  Hello World
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-02-23T11:30:42+08:00" content="2016-02-23">
-              2016-02-23
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/hexo/" itemprop="url" rel="index">
-                    <span itemprop="name">hexo</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/02/23/hello-world/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/02/23/hello-world/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-          
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/02/23/SPA框架流程解读-er/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
