@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-02-23T06:32:57.357Z</updated>
+  <updated>2016-02-24T07:50:24.421Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2016/02/23/SPA%E6%A1%86%E6%9E%B6%E6%B5%81%E7%A8%8B%E8%A7%A3%E8%AF%BB-er/"/>
     <id>http://yoursite.com/2016/02/23/SPA框架流程解读-er/</id>
     <published>2016-02-23T03:37:51.000Z</published>
-    <updated>2016-02-23T06:32:57.357Z</updated>
+    <updated>2016-02-24T07:50:24.421Z</updated>
     
     <content type="html">&lt;blockquote&gt;
 &lt;p&gt;本文将从代码层级解读er启动后以怎样的方式进入Action，并且通过怎样的流程走完Action的整个生命周期。&lt;/p&gt;
@@ -76,7 +76,7 @@
 &lt;li&gt;进入controller，&lt;code&gt;setBackup(util.bind(this.renderAction, this))&lt;/code&gt;这行代码是不是就清楚了。&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;为了更直观的表述，下面再加个流程图(&lt;em&gt;这里好像不支持直接画流程图，所以上个图片&lt;/em&gt;)：&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;../../../../images/er_flow.jpg&quot; alt=&quot;er_flow&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;../../../../uploads/er_flow.jpg&quot; alt=&quot;er_flow&quot;&gt;&lt;/p&gt;
 &lt;h4 id=&quot;小结-1&quot;&gt;&lt;a href=&quot;#小结-1&quot; class=&quot;headerlink&quot; title=&quot;小结&quot;&gt;&lt;/a&gt;小结&lt;/h4&gt;&lt;p&gt;上述从代码到描述，再加上最后的流程图，解释了Action的两个入口。即第一次进入，会通过&lt;code&gt;setTimeout(&amp;#39;forwardHash&amp;#39;, 0)&lt;/code&gt;的方式，其他则通过&lt;code&gt;locator.redirect(url)&lt;/code&gt;。&lt;/p&gt;
 &lt;h2 id=&quot;er中Action类的生命周期&quot;&gt;&lt;a href=&quot;#er中Action类的生命周期&quot; class=&quot;headerlink&quot; title=&quot;er中Action类的生命周期&quot;&gt;&lt;/a&gt;er中Action类的生命周期&lt;/h2&gt;&lt;ul&gt;
 &lt;li&gt;enter&lt;/li&gt;

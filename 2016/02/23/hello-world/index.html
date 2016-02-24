@@ -287,12 +287,14 @@ Quick">
               </span>
             
           
-
-          <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
-          </script>
-          <span id="busuanzi_container_page_pv">
-            &nbsp; | &nbsp;阅读次数 <span id="busuanzi_value_page_pv"></span>
-          </span>
+          
+          
+            <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+            </script>
+            <span id="busuanzi_container_page_pv">
+              &nbsp; | &nbsp;阅读次数 <span id="busuanzi_value_page_pv"></span>
+            </span>
+          
 
           
 
@@ -323,6 +325,46 @@ Quick">
     </div>
 
     <footer class="post-footer">
+      <! -- 添加捐赠图标 -->
+      
+          
+
+          <div class ="post-donate">
+            <div id="donate_board" class="donate_bar center">
+              <a id="btn_donate" class="btn_donate" href="javascript:;" title="Donate 打赏"></a>
+              <span class="donate_txt">
+                 &uarr;<br>
+                           
+              </span>
+              <br>
+            </div>  
+        
+            <div id="donate_guide" class="donate_bar center hidden">
+              
+                <a href="/images/alipay.png" title="支付宝打赏" class="fancybox" rel="article0"       style="float:left;margin-left:25%;margin-right:2px;">
+                <img src="/images/alipay.png" title="支付宝打赏" height="164px" width="164px">
+                </a> 
+                
+
+            
+             <a href="/images/wechat.png" title="微信打赏" class="fancybox" rel="article0" style="display:inline-block;">
+               <img src="/images/wechat.png" title="微信打赏" height="164px" width="164px">
+             </a>
+            
+          
+            </div>
+        
+            <script type="text/javascript">
+              document.getElementById('btn_donate').onclick = function(){
+                $('#donate_board').addClass('hidden');
+                $('#donate_guide').removeClass('hidden');
+              }
+            </script>
+          </div>
+
+          
+      
+      <! -- 添加捐赠图标 -->
       
         <div class="post-tags">
           
@@ -430,7 +472,7 @@ Quick">
                src="/images/avatar.jpg"
                alt="赵鹏" />
           <p class="site-author-name" itemprop="name">赵鹏</p>
-          <p class="site-description motion-element" itemprop="description">js是最好的语言</p>
+          <p class="site-description motion-element" itemprop="description">程序员，年二十有七，始从文，连考而不中。遂习武，练武场上发一矢，中鼓吏，逐之出。改学IT，自撰一函数，用之，堆栈溢出。</p>
         </div>
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
